@@ -23,5 +23,17 @@ class TestHatenaEntry < Test::Unit::TestCase
     end
     assert_equal(3, count)
   end
+
+  def test_entry()
+    ent = nil
+    hatena_entry('http://www.hatena.ne.jp/', 1) do |e|
+      ent = e
+    end
+    assert_not_nil ent
+    assert Time === ent.timestamp
+    assert String === ent.user
+    assert ent.respond_to? :comment
+    assert ent.respond_to? :tags
+  end
 end
 
