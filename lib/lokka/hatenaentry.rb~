@@ -1,0 +1,7 @@
+module Lokka
+  module Helpers
+    def hatena_netry(uri)
+      
+    end
+  end
+end
