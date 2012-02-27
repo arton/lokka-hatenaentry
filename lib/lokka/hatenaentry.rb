@@ -8,10 +8,10 @@ module Lokka
     def hatena_entry(uri, count = 10)
       open("http://b.hatena.ne.jp/entry/jsonlite/#{hatenaescape(uri)}") do |json|
         ent = JSON.parse(json.read)
-        bmcount = ent['count'].to_i
-        max = bmcount < count ? bmcount : count
+        entry = hash_to_obj(ent, HatenaBMEntry)
+        max = entry.count < count ? entry.count : count
         1.upto(max) do |i|
-          yield ent, hash_to_obj(ent['bookmarks'][i])
+          yield entry, hash_to_obj(ent['bookmarks'][i], HatenaBookmark)
         end
       end
     end
@@ -28,15 +28,34 @@ module Lokka
     def hatenaescape(uri)
       uri.gsub('#', '%23')
     end
-    def hash_to_obj(h)
-      HatenaBMEntry.new(h)
+    def hash_to_obj(h, cls)
+      cls.new(h)
     end
 
-    class HatenaBMEntry
+    class HatenaBMObj
       def initialize(h)
         h.each do |k, v|
           __send__ "#{k}=".to_sym, v
         end
+      end
+    end
+    class HatenaBMEntry < HatenaBMObj
+      def initialize(h)
+        super
+      end
+      attr_accessor :title, :url, :entry_url, :screenshot, :eid
+      attr_reader :count
+      private
+      def count=(c)
+        @count = c.to_i
+      end
+      def bookmarks=(bs)
+        # drop entries
+      end
+    end
+    class HatenaBookmark < HatenaBMObj
+      def initialize(h)
+        super
       end
       attr_accessor :comment, :user, :tags
       attr_reader :timestamp

@@ -31,8 +31,8 @@ class TestHatenaEntry < Test::Unit::TestCase
       bmk = bm
       entry = ent
     end
-    assert_equal 'http://www.hatena.ne.jp/', entry['url']
-    assert_equal 'はてな', entry['title']
+    assert_equal 'http://www.hatena.ne.jp/', entry.url
+    assert_equal 'はてな', entry.title
     assert_not_nil bmk
     assert Time === bmk.timestamp
     assert String === bmk.user
