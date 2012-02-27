@@ -1,5 +1,8 @@
+# codidng: utf-8
 require 'open-uri'
+require 'cgi'
 require 'json'
+
 module Lokka
   module Helpers
     def hatena_entry(uri, count = 10)
@@ -8,7 +11,15 @@ module Lokka
         bmcount = ent['count'].to_i
         max = bmcount < count ? bmcount : count
         1.upto(max) do |i|
-          yield hash_to_obj(ent['bookmarks'][i])
+          yield ent, hash_to_obj(ent['bookmarks'][i])
+        end
+      end
+    end
+
+    def hatena_latest_entry(uri)
+      open("http://b.hatena.ne.jp/entrylist?sort=eid&url=#{CGI::escape(uri)}") do |http|
+        http.read.scan(/href="([^"]+)"\s+class="entry-link"\s+title="([^"]+)"/m) do |href|
+          yield href[1], href[0]
         end
       end
     end

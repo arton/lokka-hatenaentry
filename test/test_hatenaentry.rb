@@ -10,7 +10,7 @@ class TestHatenaEntry < Test::Unit::TestCase
 
   def test_defenum()
     count = 0
-    hatena_entry('http://www.hatena.ne.jp/') do |e|
+    hatena_entry('http://www.hatena.ne.jp/') do |ent, bm|
       count += 1
     end
     assert_equal(10, count)
@@ -18,22 +18,37 @@ class TestHatenaEntry < Test::Unit::TestCase
 
   def test_specified_enum()
     count = 0
-    hatena_entry('http://www.hatena.ne.jp/', 3) do |e|
+    hatena_entry('http://www.hatena.ne.jp/', 3) do |ent, bm|
       count += 1
     end
     assert_equal(3, count)
   end
 
   def test_entry()
-    ent = nil
-    hatena_entry('http://www.hatena.ne.jp/', 1) do |e|
-      ent = e
+    bmk = nil
+    entry = nil
+    hatena_entry('http://www.hatena.ne.jp/', 1) do |ent, bm|
+      bmk = bm
+      entry = ent
     end
-    assert_not_nil ent
-    assert Time === ent.timestamp
-    assert String === ent.user
-    assert ent.respond_to? :comment
-    assert ent.respond_to? :tags
+    assert_equal 'http://www.hatena.ne.jp/', entry['url']
+    assert_equal 'はてな', entry['title']
+    assert_not_nil bmk
+    assert Time === bmk.timestamp
+    assert String === bmk.user
+    assert bmk.respond_to? :comment
+    assert bmk.respond_to? :tags
+  end
+
+  def test_latest_entry()
+    ent = nil
+    count = 0
+    hatena_latest_entry('http://github.com/') do |title, href|
+      assert(/\A.+-\sGitHub\Z/ =~ title)
+      assert(%r|\Ahttps?://github.com/| =~ href, "#{href} not mutch!")
+      count += 1
+    end
+    assert_equal 20, count
   end
 end
 
