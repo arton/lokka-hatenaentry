@@ -5,6 +5,34 @@ require 'json'
 
 module Lokka
   module Helpers
+    #
+    # === Summary
+    # Enumerate bookmarks for sprcified uri
+    #
+    # hatena_entry(uri, count = 10) do |entry, bm|
+    #   do something
+    # end
+    #
+    # === Arguments
+    # +uri+::
+    #  uri for the bookmarks
+    # +count+::
+    #  stop enumerate while it reaches this value. (default = 10)
+    # +entry_info+::
+    #  block variable for the entry.
+    #   see http://developer.hatena.ne.jp/ja/documents/bookmark/apis/getinfo
+    # +bm+::
+    #  block variable for the bookmark of the entry.
+    #
+    # === example
+    # info = nil
+    # hatena_entry('http://lokka.org/') do |ent, bm|
+    #   unless info
+    #     info = "total bookmarks = #{ent.count} for #{ent.title}"
+    #   end
+    #   puts "#{bm.user} bookmard at #{bm.timestamp}"
+    # end
+    #
     def hatena_entry(uri, count = 10)
       open("http://b.hatena.ne.jp/entry/jsonlite/#{hatenaescape(uri)}") do |json|
         ent = JSON.parse(json.read)
@@ -16,10 +44,39 @@ module Lokka
       end
     end
 
-    def hatena_latest_entry(uri)
-      open("http://b.hatena.ne.jp/entrylist?sort=eid&url=#{CGI::escape(uri)}") do |http|
+    #
+    # === Summary
+    # Enumerate latest bookmark for the site
+    #
+    # hatena_latest_entry(uri, option = {}) do |title, uri| end
+    #
+    # === Arguments
+    # +uri+::
+    # uri for the bookmark entry
+    # +option+::
+    # hash of the options.
+    #  :count => enumerate entry while it reaches this value. (default = 20)
+    #  :sort => type of sort. it must be one of { :hot, :count, :eid }
+    #                                                      (default = eid)
+    #  :threshold => only valid if :sort => :hot   (default = 5)
+    #
+    # === Example
+    # hatena_latest_entry('http://lokka.org/', :sort => :eid, :count => 1) do |title, uri|
+    #   puts "the latest bookmark is <a href=\"#{uri}\">#{title}</a>";
+    # end
+    #
+    def hatena_latest_entry(uri, option = {})
+      count = option[:count] || 20
+      sort = (option[:sort] || 'eid').to_s
+      if sort == 'hot'
+        sort = "hot&threshold=#{option[:threshold] || 5}"
+      end
+      open("http://b.hatena.ne.jp/entrylist?sort=#{sort}&url=#{CGI::escape(uri)}") do |http|
+        current = 0
         http.read.scan(/href="([^"]+)"\s+class="entry-link"\s+title="([^"]+)"/m) do |href|
           yield href[1], href[0]
+          current += 1
+          break if current == count
         end
       end
     end

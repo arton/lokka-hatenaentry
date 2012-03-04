@@ -41,10 +41,29 @@ class TestHatenaEntry < Test::Unit::TestCase
   end
 
   def test_latest_entry()
-    ent = nil
     count = 0
     hatena_latest_entry('http://github.com/') do |title, href|
-      assert(/\A.+-\sGitHub\Z/ =~ title)
+      assert(/\sGitHub\Z/ =~ title, "title=#{title}")
+      assert(%r|\Ahttps?://github.com/| =~ href, "#{href} not mutch!")
+      count += 1
+    end
+    assert_equal 20, count
+  end
+
+  def test_latest_entry_with_count()
+    count = 0
+    hatena_latest_entry('http://github.com/', :count => 3) do |title, href|
+      assert(/\sGitHub\Z/ =~ title, "title=#{title}")
+      assert(%r|\Ahttps?://github.com/| =~ href, "#{href} not mutch!")
+      count += 1
+    end
+    assert_equal 3, count
+  end
+
+  def test_lastest_entry_sorted_by_hot()
+    count = 0
+    hatena_latest_entry('http://github.com/', :sort => :count) do |title, href|
+      assert(/\sGitHub\Z/ =~ title, "title=#{title}")
       assert(%r|\Ahttps?://github.com/| =~ href, "#{href} not mutch!")
       count += 1
     end
